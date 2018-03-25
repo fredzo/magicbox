@@ -40,12 +40,20 @@ static Preset currentPreset;
 
 void dumpPcConfig(ProgramChangeConfig pcConfig)
 {
-    USART_printString("[ch=");
-    USART_putDec(pcConfig.channel);
-    USART_printString(",pcNum=");
+    USART_printString("[pcNum=");
     USART_putDec(pcConfig.pcNumber);
     USART_printString("]");
 }
+
+void dumpCcConfig(ControlChangeConfig ccConfig)
+{
+    USART_printString("[ccNum=");
+    USART_putDec(ccConfig.ccNumber);
+    USART_printString(",ccVal=");
+    USART_putDec(ccConfig.ccValue);
+    USART_printString("]");
+}
+
 void dumpPreset(Preset preset)
 {
     USART_printString("Preset[loop=");
@@ -68,13 +76,13 @@ void dumpPreset(Preset preset)
             break;
     }
     USART_printString(",pcConfig1");
-    dumpPcConfig(preset.pcConfig1);
+    dumpPcConfig(preset.pcConfig[0]);
     USART_printString(",pcConfig2");
-    dumpPcConfig(preset.pcConfig2);
+    dumpPcConfig(preset.pcConfig[1]);
     USART_printString(",pcConfig3");
-    dumpPcConfig(preset.pcConfig3);
+    dumpPcConfig(preset.pcConfig[2]);
     USART_printString(",pcConfig4");
-    dumpPcConfig(preset.pcConfig4);
+    dumpPcConfig(preset.pcConfig[3]);
     USART_printString("]\r\n");
 }
 
@@ -146,14 +154,11 @@ MAIN_RETURN main(void)
         for(int i=0 ; i < 4 ; i++)
         {
             currentPreset.loopState = i%4;
-            currentPreset.pcConfig1.channel = i%16; 
-            currentPreset.pcConfig1.pcNumber = i+1%16; 
-            currentPreset.pcConfig2.channel = i+2%16; 
-            currentPreset.pcConfig2.pcNumber = i+3%16; 
-            currentPreset.pcConfig3.channel = i+4%16; 
-            currentPreset.pcConfig3.pcNumber = i+5%16; 
-            currentPreset.pcConfig4.channel = i+6%16; 
-            currentPreset.pcConfig4.pcNumber = i+7%16; 
+            currentPreset.pcConfig[0].pcNumber = i%16; 
+            currentPreset.pcConfig[1].pcNumber = i+1%16; 
+            currentPreset.pcConfig[2].pcNumber = i+2%16; 
+            currentPreset.pcConfig[3].pcNumber = i+3%16; 
+            currentPreset.pcConfig[4].pcNumber = i+4%16; 
             WriteBytesFlash((unsigned long)(&presetList[i]),sizeof(currentPreset),(unsigned char *)&currentPreset);
         }
     }
