@@ -31,9 +31,9 @@ please contact mla_licensing@microchip.com
 
 #include <flash.h>
 
-#define FLASH_CONFIG_ADDRESS 0x07000 // A more-or-less arbitrary address that is a multiple of 1024       
-#define FLASH_PRESETS_ADDRESS FLASH_CONFIG_ADDRESS+2 // A more-or-less arbitrary address that is a multiple of 1024       
-const unsigned char configFlag@FLASH_CONFIG_ADDRESS;
+#define FLASH_GLOBAL_CONFIG_ADDRESS 0x06000 // A more-or-less arbitrary address that is a multiple of 1024       
+#define FLASH_PRESETS_ADDRESS FLASH_GLOBAL_CONFIG_ADDRESS+64 // A more-or-less arbitrary address that is a multiple of 1024       
+const GlobalConfig globalConfig@FLASH_GLOBAL_CONFIG_ADDRESS;
 const PresetList presetList@FLASH_PRESETS_ADDRESS;
 
 static Preset currentPreset;
@@ -115,13 +115,13 @@ MAIN_RETURN main(void)
     USART_printString("App init\r\n");
 
     USART_printString("Config flag const = ");
-    USART_putDec(configFlag);
+    USART_putDec(globalConfig.configFlag);
     USART_printString("\r\n");
    
     // Write flash test
     unsigned char CheckState;
  
-    ReadFlash(FLASH_CONFIG_ADDRESS, 1, &CheckState);
+    ReadFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckState);
     
     USART_printString("Config flag read = ");
     USART_putDec(CheckState);
@@ -132,20 +132,20 @@ MAIN_RETURN main(void)
     {   // Not yet configured
         
         // Earese flash
-        EraseFlash(FLASH_CONFIG_ADDRESS, FLASH_CONFIG_ADDRESS+2+sizeof(presetList));
+        EraseFlash(FLASH_GLOBAL_CONFIG_ADDRESS, FLASH_GLOBAL_CONFIG_ADDRESS+2+sizeof(presetList));
 
         //Change Configuration Flag
         CheckState = 0x01;
-        WriteBytesFlash(FLASH_CONFIG_ADDRESS, 1, &CheckState);
+        WriteBytesFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckState);
 
         USART_printString("Config after set flag const = ");
-        USART_putDec(configFlag);
+        USART_putDec(globalConfig.configFlag);
         USART_printString("\r\n");
 
         // Write flash test
         unsigned char CheckStateResult;
 
-        ReadFlash(FLASH_CONFIG_ADDRESS, 1, &CheckStateResult);
+        ReadFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckStateResult);
 
         USART_printString("Config after set flag read = ");
         USART_putDec(CheckStateResult);

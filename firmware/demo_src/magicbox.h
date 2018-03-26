@@ -56,16 +56,24 @@ typedef struct ControlChangeConfig_t {
  */
 typedef struct NoteConfig_t {
 	unsigned char noteNumber;
-}ProgramChangeConfig;
+}NoteConfig;
 
+
+
+#define PC_CONFIG_NUMBER    5
+#define CC_CONFIG_NUMBER    5
+#define NOTE_CONFIG_NUMBER  5
+#define PRESET_PADDING      32-(PC_CONFIG_NUMBER+2*CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
 
 /**
  * Preset structure
  */
 typedef struct Preset_t {
 	LoopState loopState;
-	ProgramChangeConfig pcConfig[5];
-	ControlChangeConfig ccConfig[5];
+	ProgramChangeConfig pcConfig[PC_CONFIG_NUMBER];
+	ControlChangeConfig ccConfig[CC_CONFIG_NUMBER];
+	NoteConfig          noteConfig[NOTE_CONFIG_NUMBER];
+    unsigned char       padding[PRESET_PADDING];
 }Preset;
 
 /**
@@ -73,14 +81,19 @@ typedef struct Preset_t {
  */
 typedef Preset PresetList[PRESET_LIST_SIZE];
 
+#define GLOBAL_CONFOIG_PADDING  64-(3+PC_CONFIG_NUMBER+CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
+
 /**
  * Global config structure
  */
 typedef struct GlobalConfig_t {
-	LoopState loopState;
-	ProgramChangeConfig pcConfig[5];
-	ControlChangeConfig ccConfig[5];
-    unsigned char padding[64-sizeof(LoopState)];
+	bool                configFlag;
+	MidiInRouting       midiInRouting;
+	UsbInRouting        usbInRouting;
+	unsigned char       pcChanel[PC_CONFIG_NUMBER];
+	unsigned char       ccChanel[CC_CONFIG_NUMBER];
+	unsigned char       noteChanel[NOTE_CONFIG_NUMBER];
+    unsigned char       padding[GLOBAL_CONFOIG_PADDING];
 }GlobalConfig;
 
 
