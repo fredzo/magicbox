@@ -51,6 +51,13 @@ typedef struct ControlChangeConfig_t {
 	unsigned char ccValue;
 }ControlChangeConfig;
 
+/**
+ *  Program change config structure
+ */
+typedef struct NoteConfig_t {
+	unsigned char noteNumber;
+}ProgramChangeConfig;
+
 
 /**
  * Preset structure
