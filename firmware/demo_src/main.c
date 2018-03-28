@@ -101,6 +101,17 @@ MAIN_RETURN main(void)
             writePresetNoErase(&currentPreset,i);
         }
     }
+    else
+    {
+            currentPreset.loopState = LOOP_BOTH;
+            currentPreset.pcConfig[0].pcNumber = 0x66; 
+            currentPreset.pcConfig[1].pcNumber = 0x55; 
+            currentPreset.pcConfig[2].pcNumber = 0x44; 
+            currentPreset.pcConfig[3].pcNumber = 0x33; 
+            currentPreset.pcConfig[4].pcNumber = 0x22;
+            currentPreset.noteConfig[4].noteNumber = 0x69;
+            writePreset(&currentPreset,2);
+    }
     USART_printString("Presets from rom = \r\n");
     for(unsigned char i=0 ; i < 4 ; i++)
     {

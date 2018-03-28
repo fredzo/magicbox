@@ -65,7 +65,7 @@ typedef struct NoteConfig_t {
 #define PC_CONFIG_NUMBER    5
 #define CC_CONFIG_NUMBER    5
 #define NOTE_CONFIG_NUMBER  5
-#define PRESET_PADDING      32-(PC_CONFIG_NUMBER+2*CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
+#define PRESET_PADDING      32-(1 /*LoopState */+PC_CONFIG_NUMBER+2*CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
 
 /**
  * Preset structure
