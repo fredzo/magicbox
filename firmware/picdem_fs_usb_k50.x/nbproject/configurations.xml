@@ -53,6 +53,7 @@
       <itemPath>../demo_src/app_device_audio_midi.c</itemPath>
       <itemPath>../demo_src/app_led_usb_status.c</itemPath>
       <itemPath>../demo_src/main.c</itemPath>
+      <itemPath>../demo_src/magicbox.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

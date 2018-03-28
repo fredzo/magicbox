@@ -31,60 +31,10 @@ please contact mla_licensing@microchip.com
 
 #include <flash.h>
 
-#define FLASH_GLOBAL_CONFIG_ADDRESS 0x06000 // A more-or-less arbitrary address that is a multiple of 1024       
-#define FLASH_PRESETS_ADDRESS FLASH_GLOBAL_CONFIG_ADDRESS+64 // A more-or-less arbitrary address that is a multiple of 1024       
-const GlobalConfig globalConfig@FLASH_GLOBAL_CONFIG_ADDRESS;
-const PresetList presetList@FLASH_PRESETS_ADDRESS;
-
+/** Static reference to current Preset */
 static Preset currentPreset;
-
-void dumpPcConfig(ProgramChangeConfig pcConfig)
-{
-    USART_printString("[pcNum=");
-    USART_putDec(pcConfig.pcNumber);
-    USART_printString("]");
-}
-
-void dumpCcConfig(ControlChangeConfig ccConfig)
-{
-    USART_printString("[ccNum=");
-    USART_putDec(ccConfig.ccNumber);
-    USART_printString(",ccVal=");
-    USART_putDec(ccConfig.ccValue);
-    USART_printString("]");
-}
-
-void dumpPreset(Preset preset)
-{
-    USART_printString("Preset[loop=");
-    switch(preset.loopState) 
-    {
-        case LOOP_OFF :
-            USART_printString("Off");
-            break;
-        case LOOP_A :
-            USART_printString("A");
-            break;
-        case LOOP_B :
-            USART_printString("B");
-            break;
-        case LOOP_BOTH :
-            USART_printString("Both");
-            break;
-        default :
-            USART_printString("Invalid");
-            break;
-    }
-    USART_printString(",pcConfig1");
-    dumpPcConfig(preset.pcConfig[0]);
-    USART_printString(",pcConfig2");
-    dumpPcConfig(preset.pcConfig[1]);
-    USART_printString(",pcConfig3");
-    dumpPcConfig(preset.pcConfig[2]);
-    USART_printString(",pcConfig4");
-    dumpPcConfig(preset.pcConfig[3]);
-    USART_printString("]\r\n");
-}
+/** Static reference to globalConfig */
+static GlobalConfig globalConfig;
 
 /********************************************************************
  * Function:        void main(void)
@@ -111,47 +61,36 @@ MAIN_RETURN main(void)
     USBDeviceInit();
     USBDeviceAttach();
     
+    
+    // Read Global Config from flash
+    readGlobalConfig(&globalConfig);
+    
     USART_printString("\r\n");
     USART_printString("App init\r\n");
 
-    USART_printString("Config flag const = ");
+    USART_printString("Config flag = ");
     USART_putDec(globalConfig.configFlag);
     USART_printString("\r\n");
    
     // Write flash test
-    unsigned char CheckState;
  
-    ReadFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckState);
-    
-    USART_printString("Config flag read = ");
-    USART_putDec(CheckState);
-    USART_printString("\r\n");
-    
- 
-    if ( CheckState != 0x01 )
+    if (globalConfig.configFlag != true)
     {   // Not yet configured
         
-        // Earese flash
-        EraseFlash(FLASH_GLOBAL_CONFIG_ADDRESS, FLASH_GLOBAL_CONFIG_ADDRESS+2+sizeof(presetList));
+        // Earase flash
+        eraseAllConfig();
 
         //Change Configuration Flag
-        CheckState = 0x01;
-        WriteBytesFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckState);
+        globalConfig.configFlag = true;
+        writeGlobalConfigNoErase(&globalConfig);
 
-        USART_printString("Config after set flag const = ");
+        readGlobalConfig(&globalConfig);
+        USART_printString("Config after set flag = ");
         USART_putDec(globalConfig.configFlag);
         USART_printString("\r\n");
 
-        // Write flash test
-        unsigned char CheckStateResult;
-
-        ReadFlash(FLASH_GLOBAL_CONFIG_ADDRESS, 1, &CheckStateResult);
-
-        USART_printString("Config after set flag read = ");
-        USART_putDec(CheckStateResult);
-        USART_printString("\r\n");
         
-        for(int i=0 ; i < 4 ; i++)
+        for(unsigned char i=0 ; i < 4 ; i++)
         {
             currentPreset.loopState = i%4;
             currentPreset.pcConfig[0].pcNumber = i%16; 
@@ -159,19 +98,19 @@ MAIN_RETURN main(void)
             currentPreset.pcConfig[2].pcNumber = i+2%16; 
             currentPreset.pcConfig[3].pcNumber = i+3%16; 
             currentPreset.pcConfig[4].pcNumber = i+4%16; 
-            WriteBytesFlash((unsigned long)(&presetList[i]),sizeof(currentPreset),(unsigned char *)&currentPreset);
+            writePresetNoErase(&currentPreset,i);
         }
     }
     USART_printString("Presets from rom = \r\n");
-    for(int i=0 ; i < 4 ; i++)
+    for(unsigned char i=0 ; i < 4 ; i++)
     {
-        dumpPreset(presetList[i]);
+        dumpPresetFromList(i);
     }
     USART_printString("Presets from read flash= \r\n");
-    for(int i=0 ; i < 4 ; i++)
+    for(unsigned char i=0 ; i < 4 ; i++)
     {
-        ReadFlash((unsigned long)(&presetList[i]),sizeof(Preset),(unsigned char *)&currentPreset);
-        dumpPreset(currentPreset);
+        readPreset(&currentPreset,i);
+        dumpPreset(&currentPreset);
     }
     
     

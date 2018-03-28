@@ -1,7 +1,9 @@
 #ifndef MAGICBOX_H
 #define MAGICBOX_H
 
-#define PRESET_LIST_SIZE 128
+#define GLOBAL_CONFIG_SIZE  64
+#define PRESET_LIST_SIZE    128
+
 
 /**
  *  Loop state enum
@@ -81,7 +83,7 @@ typedef struct Preset_t {
  */
 typedef Preset PresetList[PRESET_LIST_SIZE];
 
-#define GLOBAL_CONFOIG_PADDING  64-(3+PC_CONFIG_NUMBER+CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
+#define GLOBAL_CONFOIG_PADDING  GLOBAL_CONFIG_SIZE-(3+PC_CONFIG_NUMBER+CC_CONFIG_NUMBER+NOTE_CONFIG_NUMBER)
 
 /**
  * Global config structure
@@ -97,7 +99,84 @@ typedef struct GlobalConfig_t {
 }GlobalConfig;
 
 
+/**
+ * Dump ProgramChangeConfig to uart
+ * @param pcConfig
+ */
+void dumpPcConfig(const ProgramChangeConfig *pcConfig);
 
+/**
+ * Dump ControlChangeConfig to uart
+ * @param ccConfig
+ */
+void dumpCcConfig(const ControlChangeConfig *ccConfig);
+
+/**
+ * Dum the provided Preset to uart
+ * @param preset
+ */
+void dumpPreset(const Preset *preset);
+
+/**
+ * Dump the specified Preset to uart
+ * @param presetIndex
+ */
+void dumpPresetFromList(unsigned char presetIndex);
+
+/**
+ * Erase flash for the whole configuration area (global config + preset list)
+ */
+void eraseAllConfig();
+
+/**
+ * Erse global config from flash memory
+ */
+void eraseGlboalConfig();
+
+/**
+ * Erase twe presets from flash memeory
+ * @param firstPresetIndex the index of the first preset of the pair to erase
+ */
+void erasePresetPair(unsigned char firstPresetIndex);
+
+/**
+ * Read global config from flash
+ * @param globalConfig
+ */
+void readGlobalConfig(GlobalConfig *globalConfig);
+
+/**
+ * Write global config to flash
+ * @param globalConfig
+ */
+void writeGlobalConfig(const GlobalConfig *globalConfig);
+
+/**
+ * Write global config to flash, without erasing flash firt
+ * @param globalConfig
+ */
+void writeGlobalConfigNoErase(const GlobalConfig *globalConfig);
+
+/**
+ * Read the specified preset
+ * @param preset
+ * @param presetIndex
+ */
+void readPreset(Preset *preset, unsigned char presetIndex);
+
+/**
+ * Write preset to flash
+ * @param preset
+ * @param presetIndex
+ */
+void writePreset(const Preset *preset, unsigned char presetIndex);
+
+/**
+ * Write preset to flash, without erasing flash firt
+ * @param preset
+ * @param presetIndex
+ */
+void writePresetNoErase(const Preset *preset, unsigned char presetIndex);
 
 
 #endif // MAGICBOX_H
