@@ -25,24 +25,6 @@
 
 #include <stdbool.h>
 
-#define UART_ENABLE   RCSTAbits.SPEN
-
-#define UART_TRISTx   TRISCbits.TRISC6
-#define UART_TRISRx   TRISCbits.TRISC7
-#define UART_Tx       PORTCbits.RC6
-#define UART_Rx       PORTCbits.RC7
-
-#define TXREG         TXREG1
-#define RCREG         RCREG1
-//#define RCSTA         RCSTA1
-//#define RCSTAbits     RCSTA1bits
-//#define TXSTA         TXSTA1
-//#define TXSTAbits     TXSTA1bits
-#define SPBRG         SPBRG1
-#define SPBRGH        SPBRGH1
-#define BAUDCON       BAUDCON1
-#define RCIF          RC1IF
-
 
 
 
@@ -76,7 +58,7 @@ void USART_Initialize();
  * Note:
  *
  *****************************************************************************/
-void USART_putcUSART(char);
+void USART_Write(char);
 
 /******************************************************************************
  * Function:        unsigned char USART_getcUSART()
@@ -94,7 +76,12 @@ void USART_putcUSART(char);
  * Note:
  *
  *****************************************************************************/
-unsigned char USART_getcUSART(void);
+unsigned char USART_Read(void);
+
+/**
+ * Returns the number of bytes available in the input buffer
+ */
+unsigned char USART_available();
 
 /*******************************************************************************
 Function: USART_printString( char *str )
@@ -149,4 +136,48 @@ Overview: This function converts hex data into a string
 Note: none
 *******************************************************************************/
 void USART_putHex( int toPrint );
+
+
+/**
+  @Summary
+    Maintains the driver's transmitter state machine and implements its ISR.
+
+  @Description
+    This routine is used to maintain the driver's internal transmitter state
+    machine.This interrupt service routine is called when the state of the
+    transmitter needs to be maintained in a non polled manner.
+
+  @Preconditions
+    EUSART1_Initialize() function should have been called
+    for the ISR to execute correctly.
+
+  @Param
+    None
+
+  @Returns
+    None
+*/
+void USART_Transmit_ISR(void);
+
+/**
+  @Summary
+    Maintains the driver's receiver state machine and implements its ISR
+
+  @Description
+    This routine is used to maintain the driver's internal receiver state
+    machine.This interrupt service routine is called when the state of the
+    receiver needs to be maintained in a non polled manner.
+
+  @Preconditions
+    EUSART1_Initialize() function should have been called
+    for the ISR to execute correctly.
+
+  @Param
+    None
+
+  @Returns
+    None
+*/
+void USART_Receive_ISR(void);
+
 #endif //USART_H

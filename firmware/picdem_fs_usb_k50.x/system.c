@@ -107,12 +107,12 @@ void SYSTEM_Initialize( SYSTEM_STATE state )
 			
 			
 #if defined(__XC8)
+    #if defined(USB_INTERRUPT)
 void interrupt SYS_InterruptHigh(void)
 {
-    #if defined(USB_INTERRUPT)
         USBDeviceTasks();
-    #endif
 }
+    #endif
 #else
     void YourHighPriorityISRCode();
     void YourLowPriorityISRCode();

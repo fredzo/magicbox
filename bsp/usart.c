@@ -24,6 +24,24 @@
 #include <stdbool.h>
 #include <xc.h>
 
+
+#define EUSART1_TX_BUFFER_SIZE 64
+#define EUSART1_RX_BUFFER_SIZE 64
+
+/**
+  Section: Global Variables
+*/
+volatile unsigned char eusart1TxHead = 0;
+volatile unsigned char eusart1TxTail = 0;
+volatile unsigned char eusart1TxBuffer[EUSART1_TX_BUFFER_SIZE];
+volatile unsigned char eusart1TxBufferRemaining;
+
+volatile unsigned char eusart1RxHead = 0;
+volatile unsigned char eusart1RxTail = 0;
+volatile unsigned char eusart1RxBuffer[EUSART1_RX_BUFFER_SIZE];
+volatile unsigned char eusart1RxCount;
+
+
 /******************************************************************************
  * Function:        void USART_Initialize(void)
  *
@@ -43,7 +61,11 @@
 
 void USART_Initialize()
 {
-       unsigned char c;
+    // disable interrupts before changing states
+    PIE1bits.RC1IE = 0;
+    PIE1bits.TX1IE = 0;
+
+    unsigned char c;
      
        ANSELCbits.ANSC7 = 0;    // Make RC6 and RC7 pin digital
        ANSELCbits.ANSC6 = 0;
@@ -70,6 +92,17 @@ void USART_Initialize()
 
         c = RCREG;				// read
     
+    // initializing the driver state
+    eusart1TxHead = 0;
+    eusart1TxTail = 0;
+    eusart1TxBufferRemaining = sizeof(eusart1TxBuffer);
+
+    eusart1RxHead = 0;
+    eusart1RxTail = 0;
+    eusart1RxCount = 0;
+
+    // enable receive interrupt
+    PIE1bits.RC1IE = 1;
     
 
 }//end USART_Initialize
@@ -90,10 +123,27 @@ void USART_Initialize()
  * Note:
  *
  *****************************************************************************/
-void USART_putcUSART(char c)
+void USART_Write(char c)
 {
-    while (TXSTA1bits.TRMT == 0) {}
-    TXREG1 = c;
+    while(0 == eusart1TxBufferRemaining)
+    {
+    }
+
+    if(0 == PIE1bits.TX1IE)
+    {
+        TXREG1 = c;
+    }
+    else
+    {
+        PIE1bits.TX1IE = 0;
+        eusart1TxBuffer[eusart1TxHead++] = c;
+        if(sizeof(eusart1TxBuffer) <= eusart1TxHead)
+        {
+            eusart1TxHead = 0;
+        }
+        eusart1TxBufferRemaining--;
+    }
+    PIE1bits.TX1IE = 1;
 }
 
 /******************************************************************************
@@ -112,26 +162,34 @@ void USART_putcUSART(char c)
  * Note:
  *
  *****************************************************************************/
-unsigned char USART_getcUSART ()
+unsigned char USART_Read ()
 {
-	char  c;
-
-	if (RCSTAbits.OERR)  // in case of overrun error
-	{                    // we should never see an overrun error, but if we do,
-		RCSTAbits.CREN = 0;  // reset the port
-		c = RCREG;
-		RCSTAbits.CREN = 1;  // and keep going.
-	}
-	else
+    unsigned char readValue  = 0;
+    
+    while(0 == eusart1RxCount)
     {
-		c = RCREG;
     }
-// not necessary.  EUSART auto clears the flag when RCREG is cleared
-//	PIR1bits.RCIF = 0;    // clear Flag
 
-  
-	return c;
+    readValue = eusart1RxBuffer[eusart1RxTail++];
+    if(sizeof(eusart1RxBuffer) <= eusart1RxTail)
+    {
+        eusart1RxTail = 0;
+    }
+    PIE1bits.RC1IE = 0;
+    eusart1RxCount--;
+    PIE1bits.RC1IE = 1;
+
+    return readValue;
 }
+
+/**
+ * Returns the number of bytes available in the input buffer
+ */
+unsigned char USART_available()
+{
+    return eusart1RxCount;
+}
+
 
 /*******************************************************************************
 Function: USART_printString( char *str )
@@ -152,7 +210,7 @@ void USART_printString(const unsigned char *str )
     unsigned char c;
 
     while( (c = *str++) )
-        USART_putcUSART(c);
+        USART_Write(c);
 }
 
 /*******************************************************************************
@@ -178,18 +236,18 @@ void  USART_putDec(unsigned char dec)
 
     if (res/100)
     {
-        USART_putcUSART( res/100 + '0' );
+        USART_Write( res/100 + '0' );
         printed_already = 1;
     }
     res = res - (res/100)*100;
 
     if ((res/10) || (printed_already == 1))
     {
-        USART_putcUSART( res/10 + '0' );
+        USART_Write( res/10 + '0' );
     }
     res = res - (res/10)*10;
 
-    USART_putcUSART( res + '0' );
+    USART_Write( res + '0' );
 }
 
 /*******************************************************************************
@@ -215,11 +273,49 @@ void USART_putHex( int toPrint )
 
     printVar = toPrint;
     toPrint = (toPrint>>4) & 0x0F;
-    USART_putcUSART( CharacterArray[toPrint] );
+    USART_Write( CharacterArray[toPrint] );
 
     toPrint = printVar & 0x0F;
-    USART_putcUSART( CharacterArray[toPrint] );
+    USART_Write( CharacterArray[toPrint] );
 
     return;
 }
 
+void USART_Transmit_ISR(void)
+{
+
+    // add your EUSART1 interrupt custom code
+    if(sizeof(eusart1TxBuffer) > eusart1TxBufferRemaining)
+    {
+        TXREG1 = eusart1TxBuffer[eusart1TxTail++];
+        if(sizeof(eusart1TxBuffer) <= eusart1TxTail)
+        {
+            eusart1TxTail = 0;
+        }
+        eusart1TxBufferRemaining++;
+    }
+    else
+    {
+        PIE1bits.TX1IE = 0;
+    }
+}
+
+void USART_Receive_ISR(void)
+{
+    
+    if(1 == RCSTA1bits.OERR)
+    {
+        // EUSART1 error - restart
+
+        RCSTA1bits.CREN = 0;
+        RCSTA1bits.CREN = 1;
+    }
+
+    // buffer overruns are ignored
+    eusart1RxBuffer[eusart1RxHead++] = RCREG1;
+    if(sizeof(eusart1RxBuffer) <= eusart1RxHead)
+    {
+        eusart1RxHead = 0;
+    }
+    eusart1RxCount++;
+}

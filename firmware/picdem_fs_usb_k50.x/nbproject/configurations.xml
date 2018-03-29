@@ -26,6 +26,7 @@
       <itemPath>../demo_src/app_device_audio_midi.h</itemPath>
       <itemPath>io_mapping.h</itemPath>
       <itemPath>../demo_src/magicbox.h</itemPath>
+      <itemPath>../demo_src/interrupt_manager.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -54,6 +55,7 @@
       <itemPath>../demo_src/app_led_usb_status.c</itemPath>
       <itemPath>../demo_src/main.c</itemPath>
       <itemPath>../demo_src/magicbox.c</itemPath>
+      <itemPath>../demo_src/interrupt_manager.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

@@ -28,6 +28,7 @@ please contact mla_licensing@microchip.com
 
 #include "magicbox.h"
 #include "usart.h"
+#include "interrupt_manager.h"
 
 #include <flash.h>
 
@@ -60,7 +61,8 @@ MAIN_RETURN main(void)
 
     USBDeviceInit();
     USBDeviceAttach();
-    
+
+    INTERRUPT_Initialize();
     
     // Read Global Config from flash
     readGlobalConfig(&globalConfig);
