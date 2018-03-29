@@ -50,7 +50,11 @@
 #include <xc.h>
 
 void  INTERRUPT_Initialize (void)
-{
+{   // Enable global interrupts
+    INTCONbits.GIE = 1;
+    INTCONbits.PEIE = 1;
+    // Enable UART receive interrupt
+    PIE1bits.RCIE = 1;
     // Disable Interrupt Priority Vectors (16CXXX Compatibility Mode)
     RCONbits.IPEN = 0;
 }
