@@ -151,6 +151,11 @@ MAIN_RETURN main(void)
 
         //Application specific tasks
         APP_DeviceAudioMIDITasks();
+        
+        while(USART_available()>0)
+        {   // Echo
+            USART_Write(USART_Read());
+        }
 
     }//end while
 }//end main
